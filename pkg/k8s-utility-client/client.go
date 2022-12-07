@@ -163,6 +163,11 @@ func (k *K8sClients) ResourcesAndObjectsFromBytes(yamlBytes []byte) (interfaces 
 		}
 
 		obj, gvk, err := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
+		if err != nil {
+			err = errors.Wrapf(err, "failed decoding resource file")
+			return interfaces, objects, err
+		}
+
 		unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 		if err != nil {
 			err = errors.Wrapf(err, "failed converting object unstructured")
@@ -216,7 +221,7 @@ func (k *K8sClients) ApplyResources(ctx context.Context, interfaces []dynamic.Re
 	for i, ri := range interfaces {
 		obj := objects[i]
 
-		// Try to get the resource from k8s.  If it exists, we'll have to update, adn cope with the optimistic lock
+		// Try to get the resource from k8s.  If it exists, we'll have to update, and cope with the optimistic lock
 		res, getErr := ri.Get(ctx, obj.GetName(), metav1.GetOptions{})
 		if getErr == nil {
 			rv := res.GetResourceVersion()
