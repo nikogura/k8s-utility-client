@@ -37,7 +37,9 @@ To load the files, run
             log.Fatalf("failed to load yaml file %s: %s", fileName, err)
         }
 
-## Applying Resource Fields
+## Applying Resources
+
+The ApplyResources() method is smart enough to Create or Update, depending on whether the resources being applied already exist or not.
 
         ctx := context.TODO()
 
@@ -45,4 +47,35 @@ To load the files, run
         err = client.ApplyResources(ctx, interfaces, objects)
         if err != nil {
             t.Errorf("failed to apply resources: %s", err)
+        }
+
+## Getting Resources
+
+To Get and examine resources, use the 'objects' and 'interfaces' returned by loading:
+
+        fmt.Printf("Verifying resources in k8s.\n")
+        for i, obj := range objects {
+            ri := interfaces[i]
+
+            o, err := ri.Get(ctx, obj.GetName(), metav1.GetOptions{})
+            if err != nil {
+                t.Errorf("failed getting resource %s kind %s", obj.GetName(), obj.GetKind())
+            }
+
+            assert.Equal(t, obj.GetName(), o.GetName(), "Created Resource name doesn't match expectation.")
+            assert.Equal(t, obj.GetKind(), o.GetKind(), "Created Resource Kind does not match expectations.")
+            assert.Equal(t, obj.GetNamespace(), o.GetNamespace(), "Created Resource Namespace does not match expectations.")
+
+        }
+
+## Deleting Resources
+
+To clean up, call DeleteResources()
+
+        ctx := context.TODO()
+
+        fmt.Printf("Cleaning up resources in k8s.\n")
+        err = client.DeleteResources(ctx, interfaces, objects)
+        if err != nil {
+            t.Errorf("failed deleting resources: %s", err)
         }
