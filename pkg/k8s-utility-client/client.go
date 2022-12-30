@@ -84,7 +84,13 @@ func NewK8sClients() (clients *K8sClients, err error) {
 				log.Fatalf("failed loading kubeconfig file: %s", configFile)
 			}
 
-			clients.Namespace = config.Contexts[config.CurrentContext].Namespace
+			clients.Namespace = "default"
+
+			if config.CurrentContext != "" {
+				if config.Contexts[config.CurrentContext] != nil {
+					clients.Namespace = config.Contexts[config.CurrentContext].Namespace
+				}
+			}
 
 			// create a config from the file
 			cc, err := clientcmd.NewDefaultClientConfig(*config, &clientcmd.ConfigOverrides{}).ClientConfig()
